@@ -28,8 +28,8 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>nifi-nifi-privacy-processors</module>
-        <module>nifi-nifi-privacy-nar</module>
+        <module>nifi-privacy-processors</module>
+        <module>nifi-privacy-nar</module>
     </modules>
 
 </project>

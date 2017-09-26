@@ -22,7 +22,7 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>nifi-nifi-privacy-processors</artifactId>
+    <artifactId>nifi-privacy-processors</artifactId>
     <packaging>jar</packaging>
 
     <dependencies>
