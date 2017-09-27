@@ -40,24 +40,38 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-@Tags({"example"})
-@CapabilityDescription("Provide a description")
+@Tags({"html","json","scrape","extract"})
+@CapabilityDescription("Extracts data from a different number of HTML sources and writes a JSON inside the contents of " +
+        "the flowfile.")
 @SeeAlso({})
 @ReadsAttributes({@ReadsAttribute(attribute="", description="")})
 @WritesAttributes({@WritesAttribute(attribute="", description="")})
-public class MyProcessor extends AbstractProcessor {
+public class HTMLToJSON extends AbstractProcessor {
 
-    public static final PropertyDescriptor MY_PROPERTY = new PropertyDescriptor
-            .Builder().name("MY_PROPERTY")
-            .displayName("My property")
-            .description("Example Property")
+    public static final PropertyDescriptor SOURCE = new PropertyDescriptor
+            .Builder().name("source")
+            .description("the name of the source for the HTML data.")
             .required(true)
+            .expressionLanguageSupported(true)
             .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
             .build();
 
-    public static final Relationship MY_RELATIONSHIP = new Relationship.Builder()
-            .name("MY_RELATIONSHIP")
-            .description("Example relationship")
+    public static final PropertyDescriptor ATTRIBUTES = new PropertyDescriptor
+            .Builder().name("attributes")
+            .description("comma separated list of additional flowfile attributes the values of which" +
+                    "will be added to the resulting JSON.")
+            .required(false)
+            .expressionLanguageSupported(true)
+            .build();
+
+    public static final Relationship SUCCESS = new Relationship.Builder()
+            .name("success")
+            .description("The resulting JSON flowfile is sent to this relationship.")
+            .build();
+
+    public static final Relationship FAILURE = new Relationship.Builder()
+            .name("failure")
+            .description("If there is any error in processing, the flowfile is sent to this relationship.")
             .build();
 
     private List<PropertyDescriptor> descriptors;
@@ -67,11 +81,13 @@ public class MyProcessor extends AbstractProcessor {
     @Override
     protected void init(final ProcessorInitializationContext context) {
         final List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
-        descriptors.add(MY_PROPERTY);
+        descriptors.add(SOURCE);
+        descriptors.add(ATTRIBUTES);
         this.descriptors = Collections.unmodifiableList(descriptors);
 
         final Set<Relationship> relationships = new HashSet<Relationship>();
-        relationships.add(MY_RELATIONSHIP);
+        relationships.add(SUCCESS);
+        relationships.add(FAILURE);
         this.relationships = Collections.unmodifiableSet(relationships);
     }
 
