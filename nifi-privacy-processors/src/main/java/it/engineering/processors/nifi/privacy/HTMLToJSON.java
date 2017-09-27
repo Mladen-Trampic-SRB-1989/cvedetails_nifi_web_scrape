@@ -112,6 +112,14 @@ public class HTMLToJSON extends AbstractProcessor {
         if ( flowFile == null ) {
             return;
         }
+
+        final String source = context.getProperty(SOURCE).evaluateAttributeExpressions(flowFile).getValue();
+        final String attributesString = context.getProperty(ATTRIBUTES)
+                .evaluateAttributeExpressions(flowFile).getValue();
+        final String[] attributes = (attributesString == null) ?
+                new String[1]:
+                attributesString.split(",");
+
         // TODO implement
 
     }
