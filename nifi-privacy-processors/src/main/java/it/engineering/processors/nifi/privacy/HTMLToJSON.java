@@ -141,6 +141,10 @@ public class HTMLToJSON extends AbstractProcessor {
                         JSONObject jo = new JSONObject();
                         for (int i = 0, l = KEYS.size(); i < l; i++) {
                             String key = KEYS.get(i).text();
+                            key = key.replaceAll("\\s+","_");
+                            key = key.replace("(","");
+                            key = key.replace(")","");
+                            key = key.toLowerCase();
                             String value = VALUES.get(i).text();
                             jo.put(key, value);
                         }

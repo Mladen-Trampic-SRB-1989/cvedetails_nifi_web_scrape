@@ -2,3 +2,6 @@ nifi-privacy-processors/nifi-privacy-processors.iml
 .idea
 nifi-privacy-etl.iml
 nifi-privacy-nar/nifi-privacy-nar.iml
+nifi-privacy-nar/target
+nifi-privacy-processors/target/
+target/
