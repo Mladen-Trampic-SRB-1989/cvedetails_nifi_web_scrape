@@ -30,8 +30,6 @@ import org.apache.nifi.components.Validator;
 import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.processor.*;
 import org.apache.nifi.processor.exception.ProcessException;
-import org.apache.nifi.processor.util.StandardValidators;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -39,26 +37,19 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
-@Tags({"html","json","scrape","extract"})
-@CapabilityDescription("Extracts data from a different number of HTML sources and writes a JSON inside the contents of " +
+@Tags({"html","json","scrape","extract","microsoft","vulnerabilities"})
+@CapabilityDescription("Extracts data from Microsoft Vulnerabilities and writes a JSON inside the contents of " +
         "the flowfile.")
 @SeeAlso({})
 @ReadsAttributes({@ReadsAttribute(attribute="", description="")})
 @WritesAttributes({@WritesAttribute(attribute="", description="")})
 public class MicrosoftVulnerabilitiesExtractor extends AbstractProcessor {
 
-    public static final PropertyDescriptor SOURCE = new PropertyDescriptor
-            .Builder().name("source")
-            .description("the name of the source for the HTML data.")
-            .required(true)
-            .expressionLanguageSupported(true)
-            .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
-            .build();
-
     public static final PropertyDescriptor ATTRIBUTES = new PropertyDescriptor
             .Builder().name("attributes")
-            .description("comma separated list of additional flowfile attributes the values of which" +
+            .description("comma separated list of additional flowfile attributes which" +
                     "will be added to the resulting JSON.")
             .required(false)
             .expressionLanguageSupported(true)
@@ -82,7 +73,6 @@ public class MicrosoftVulnerabilitiesExtractor extends AbstractProcessor {
     @Override
     protected void init(final ProcessorInitializationContext context) {
         final List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
-        descriptors.add(SOURCE);
         descriptors.add(ATTRIBUTES);
         this.descriptors = Collections.unmodifiableList(descriptors);
 
@@ -114,58 +104,40 @@ public class MicrosoftVulnerabilitiesExtractor extends AbstractProcessor {
             return;
         }
 
-        final String source = context.getProperty(SOURCE).evaluateAttributeExpressions(flowFile).getValue();
         final String attributesString = context.getProperty(ATTRIBUTES)
                 .evaluateAttributeExpressions(flowFile).getValue();
-        final String[] attributes = (attributesString == null) ?
-                new String[1]:
-                attributesString.split(",");
+        final Boolean additionalAttributes = attributesString == null;
+        final List<String> attributes = (attributesString == null) ?
+                new ArrayList<>():
+                Arrays.asList(attributesString.split(","));
 
         final Map<String,String> attributesMap = new HashMap<>();
-        for (String key: attributes) {
-            if (flowFile.getAttributes().containsKey(key)) {
-                attributesMap.put(key,flowFile.getAttribute(key));
-            }
+        if (additionalAttributes) {
+            flowFile.getAttributes()
+                    .entrySet().stream()
+                    .filter(entry -> attributes.contains(entry.getKey()))
+                    .forEach(entry ->
+                            attributesMap.put(entry.getKey(),entry.getValue()));
         }
 
         try {
             flowFile = session.write(flowFile, (inputStream, outputStream) -> {
-                switch (source){
-                    case "http://www.cvedetails.com":
-                        Document document = Jsoup.parse(inputStream, "UTF-8","http://www.cvedetails.com");
-                        Element table = document.select("#cvssscorestable").first();
-                        Elements KEYS = table.select("th");
-                        Elements VALUES = table.select("tr");
-                        JSONObject jsonObj = new JSONObject();
-                        JSONArray jsonArr = new JSONArray();
-                        JSONObject jo = new JSONObject();
-                        for (int i = 0, l = KEYS.size(); i < l; i++) {
-                            String key = KEYS.get(i).text();
-                            key = key.replaceAll("\\s+","_");
-                            key = key.replace("(","");
-                            key = key.replace(")","");
-                            key = key.toLowerCase();
-                            String value = VALUES.get(i).text();
-                            jo.put(key, value);
-                        }
-                        jsonArr.put(jo);
-                        jsonObj.put("CVSSCORE", jsonArr);
-                        for (Map.Entry<String,String> me : attributesMap.entrySet()) {
-                            jsonObj.put(me.getKey(),me.getValue());
-                        }
+                Document document = Jsoup.parse(inputStream, "UTF-8",
+                        "https://technet.microsoft.com");
+                JSONObject jsonObj = new JSONObject();
 
-                        outputStream.write(jsonObj.toString().getBytes("UTF-8"));
-                }
+                Elements sections = document.select(".sectionblock");
+                String content = sections.stream().map(Element::text).collect(Collectors.joining("\n"));
+
+                jsonObj.put("content",content);
+                attributesMap.forEach(jsonObj::put);
+
+                outputStream.write(jsonObj.toString().getBytes("UTF-8"));
             });
             session.transfer(flowFile, SUCCESS);
         } catch (RuntimeException t) {
-            getLogger().error("Unable to process ExtractTextProcessor file " + t.getLocalizedMessage());
-            getLogger().error("{} failed to process due to {}; rolling back session", new Object[] { this, t });
+            getLogger().error("Unable to process HTML: " + t.getMessage());
             session.transfer(flowFile,FAILURE);
         }
-
-        // TODO implement
-
-
     }
 }
