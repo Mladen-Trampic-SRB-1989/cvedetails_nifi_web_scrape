@@ -22,13 +22,13 @@ import org.junit.Before;
 import org.junit.Test;
 
 
-public class HTMLToJSONTest {
+public class CVEDetailsExtractorTest {
 
     private TestRunner testRunner;
 
     @Before
     public void init() {
-        testRunner = TestRunners.newTestRunner(HTMLToJSON.class);
+        testRunner = TestRunners.newTestRunner(CVEDetailsExtractor.class);
     }
 
     @Test

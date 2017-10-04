@@ -46,7 +46,7 @@ import java.util.*;
 @SeeAlso({})
 @ReadsAttributes({@ReadsAttribute(attribute="", description="")})
 @WritesAttributes({@WritesAttribute(attribute="", description="")})
-public class HTMLToJSON extends AbstractProcessor {
+public class CVEDetailsExtractor extends AbstractProcessor {
 
     public static final PropertyDescriptor SOURCE = new PropertyDescriptor
             .Builder().name("source")
