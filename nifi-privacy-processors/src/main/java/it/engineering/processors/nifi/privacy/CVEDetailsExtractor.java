@@ -16,7 +16,6 @@
  */
 package it.engineering.processors.nifi.privacy;
 
-import org.apache.nifi.util.StringUtils;
 import it.engineering.processors.nifi.privacy.cvedetailsutility.CVEFeatures;
 import org.apache.nifi.annotation.behavior.ReadsAttribute;
 import org.apache.nifi.annotation.behavior.ReadsAttributes;
@@ -27,10 +26,10 @@ import org.apache.nifi.annotation.documentation.SeeAlso;
 import org.apache.nifi.annotation.documentation.Tags;
 import org.apache.nifi.annotation.lifecycle.OnScheduled;
 import org.apache.nifi.components.PropertyDescriptor;
-import org.apache.nifi.components.Validator;
 import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.processor.*;
 import org.apache.nifi.processor.exception.ProcessException;
+import org.apache.nifi.util.StringUtils;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -47,14 +46,7 @@ import java.util.*;
 @WritesAttributes({@WritesAttribute(attribute = "", description = "")})
 public class CVEDetailsExtractor extends AbstractProcessor {
 
-    public static final PropertyDescriptor ATTRIBUTES = new PropertyDescriptor
-            .Builder().name("attributes")
-            .description("comma separated list of additional flowfile attributes the values of which" +
-                    "will be added to the resulting JSON.")
-            .required(false)
-            .expressionLanguageSupported(true)
-            .addValidator(Validator.VALID)
-            .build();
+
 
     public static final Relationship SUCCESS = new Relationship.Builder()
             .name("success")
@@ -73,7 +65,6 @@ public class CVEDetailsExtractor extends AbstractProcessor {
     @Override
     protected void init(final ProcessorInitializationContext context) {
         final List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
-        descriptors.add(ATTRIBUTES);
         this.descriptors = Collections.unmodifiableList(descriptors);
 
         final Set<Relationship> relationships = new HashSet<Relationship>();
@@ -104,18 +95,7 @@ public class CVEDetailsExtractor extends AbstractProcessor {
             return;
         }
 
-        final String attributesString = context.getProperty(ATTRIBUTES)
-                .evaluateAttributeExpressions(flowFile).getValue();
-        final String[] attributes = (attributesString == null) ?
-                new String[1] :
-                attributesString.split(",");
 
-        final Map<String, String> attributesMap = new HashMap<>();
-        for (String key : attributes) {
-            if (flowFile.getAttributes().containsKey(key)) {
-                attributesMap.put(key, flowFile.getAttribute(key));
-            }
-        }
 
         try {
             flowFile = session.write(flowFile, (inputStream, outputStream) -> {
@@ -178,9 +158,6 @@ public class CVEDetailsExtractor extends AbstractProcessor {
             getLogger().error("{} failed to process due to {}; rolling back session", new Object[]{this, t});
             session.transfer(flowFile, FAILURE);
         }
-
-        // TODO implement
-
 
     }
 }
