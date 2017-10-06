@@ -1,4 +1,4 @@
-package it.engineering.processors.nifi.privacy.cvedetailsutility;
+package it.engineering.processors.nifi.cvedetailsutility;
 
 public class StringSimilarity {
 

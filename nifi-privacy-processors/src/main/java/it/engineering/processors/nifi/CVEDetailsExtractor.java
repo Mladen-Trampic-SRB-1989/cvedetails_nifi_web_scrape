@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.engineering.processors.nifi.privacy;
+package it.engineering.processors.nifi;
 
-import it.engineering.processors.nifi.privacy.cvedetailsutility.CVEFeatures;
+import it.engineering.processors.nifi.cvedetailsutility.CVEFeatures;
 import org.apache.nifi.annotation.behavior.ReadsAttribute;
 import org.apache.nifi.annotation.behavior.ReadsAttributes;
 import org.apache.nifi.annotation.behavior.WritesAttribute;
