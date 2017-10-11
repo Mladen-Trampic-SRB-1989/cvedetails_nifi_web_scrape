@@ -6,8 +6,8 @@ Extraction is done through library JSOUP, and output is generated with library J
 
 This processor, takes html flowfile that is previously in nifi flow fetched, and extracts data from webpage into specific JSON.
 eg.
-{
-	"access_Complexity": {
+{\n
+	"access_Complexity": {\n
 		"Description": "{STRING}",
 		"value": "{STRING}"
 	},
